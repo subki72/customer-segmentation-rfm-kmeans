@@ -1,4 +1,3 @@
-```markdown
 # Customer Segmentation and Value Tiering via RFM Analysis & K-Means Clustering
 
 ## Executive Summary
@@ -55,4 +54,3 @@ Based on the synthesis of the RFM pipeline and K-Means clustering, the actionabl
 3. To view the complete exploratory and analytical process, open and run `notebooks/User_Segmentation.ipynb`.
 4. To execute the production-ready pipeline, place your dataset in the `data/` directory and run: `python main.py`
 
-```
