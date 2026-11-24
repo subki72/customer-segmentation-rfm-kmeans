@@ -109,5 +109,5 @@ tzdata==2026.6
     # via
     #   pandas
     #   python-dateutil
-uvicorn==0.34.0
+uvicorn==0.54.0
     # via -r requirements.txt
