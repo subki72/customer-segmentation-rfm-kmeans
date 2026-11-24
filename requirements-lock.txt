@@ -20,7 +20,7 @@ coverage==7.17.5
     # via pytest-cov
 cycler==0.12.1
     # via matplotlib
-fastapi==0.115.6
+fastapi==0.165.0
     # via -r requirements.txt
 fonttools==4.68.0
     # via matplotlib
