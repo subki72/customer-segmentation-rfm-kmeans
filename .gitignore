@@ -1,22 +1,43 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+secrets/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
+# Virtual Environments & Tool Caches
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Virtual Environments
-venv/
-env/
-.env
-
-# Data files 
+# Data & Generated Outputs
 data/*.csv
 data/*.xlsx
 *.csv
 *.xlsx
+outputs/
 
-# OS generated files
+# OS & IDE files
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
