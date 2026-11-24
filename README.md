@@ -1,56 +1,126 @@
-# Customer Segmentation and Value Tiering via RFM Analysis & K-Means Clustering
+# Customer Segmentation via RFM Analysis & K-Means Clustering
+
+[![CI Pipeline](https://github.com/subki72/customer-segmentation-rfm-kmeans/actions/workflows/ci.yml/badge.svg)](https://github.com/subki72/customer-segmentation-rfm-kmeans/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## Executive Summary
-This project presents an end-to-end data pipeline and machine learning implementation designed to segment a retail customer base. Moving beyond basic heuristic segmentation, this analysis integrates Recency, Frequency, and Monetary (RFM) modeling with K-Means clustering. The primary objective is to identify high-value customer cohorts, mitigate churn risk, and provide actionable, data-driven recommendations to optimize marketing ROI.
 
-## Business Problem
-In a highly competitive retail environment, applying a uniform marketing strategy to all customers leads to inefficient budget allocation. The business requires a precise understanding of its customer base to:
-1. Retain top-tier customers (Champions).
-2. Reactivate high-value customers who are showing signs of churn.
-3. Minimize marketing expenditure on low-value, dormant accounts.
+This project delivers a production-ready customer analytics pipeline and FastAPI microservice combining **Recency, Frequency, Monetary (RFM)** behavioral modeling with **K-Means clustering**. It enables retail and e-commerce teams to identify high-value customer cohorts, surface churn-risk accounts early, and serve real-time segmentation results over HTTP or headless batch jobs while preserving the original exploratory Jupyter notebook (`User Segmentation.ipynb`).
 
-## Methodology
-The project is structured into four distinct phases, implemented using Object-Oriented Programming (OOP) principles for scalability and reproducibility:
+## Architecture Overview
 
-1. **Data Ingestion & Preprocessing:** Developed a `DataPreprocessor` class to handle raw data cleaning, including the removal of anomalies, null values, and cancelled transactions, followed by feature engineering of baseline revenue metrics.
-2. **RFM Feature Engineering & Value Tiering:** Built an `RFMEngine` class to calculate RFM metrics. Applied quintile scoring and regex mapping to define base segments, subsequently introducing a "Monetary Value Tier" (High Value vs. Standard Value) to prioritize business actions.
-3. **Machine Learning Integration:** Implemented a `CustomerClustering` class utilizing K-Means. The data was normalized using logarithmic transformation to handle right-skewness and standardized to ensure equal feature contribution, allowing the algorithm to uncover hidden behavioral patterns independent of manual rules.
-4. **Data Visualization & Strategy:** Created a `SegmentVisualizer` class to generate industry-standard distributions and scatter plots, translating model outputs into clear business strategies.
-
-## Key Strategic Insights
-Based on the synthesis of the RFM pipeline and K-Means clustering, the actionable recommendations are as follows:
-
-* **High Value Champions & Loyalists:** Prioritize retention through exclusive early-access programs and VIP perks rather than margin-reducing discounts.
-* **High Value At Risk:** These cohorts require immediate intervention. Deploy aggressive, targeted win-back campaigns (e.g., personalized high-value discount codes) to prevent the loss of significant historical revenue.
-* **Standard/Low Value Hibernating:** Restrict marketing spend. Transition these accounts to low-cost, automated email pipelines to maintain baseline engagement without eroding profitability.
-
-## Technology Stack
-* **Language:** Python 3.x
-* **Data Manipulation:** Pandas, NumPy
-* **Machine Learning:** Scikit-Learn
-* **Data Visualization:** Matplotlib, Seaborn
-
-## Repository Structure
 ```text
-├── data/
-│   └── raw_data.csv             # The raw dataset (not tracked in version control)
-├── notebooks/
-│   └── User_Segmentation.ipynb  # Comprehensive analysis and execution notebook
-├── src/
-│   ├── __init__.py
-│   ├── data_pipeline.py         # DataPreprocessor class
-│   ├── rfm_engine.py            # RFMEngine class
-│   ├── ml_clustering.py         # CustomerClustering class
-│   └── visualizer.py            # SegmentVisualizer class
-├── main.py                      # Main execution script for the modular pipeline
-├── requirements.txt             # Project dependencies
-└── README.md                    # Project documentation
-
+Raw Transactions (CSV / API JSON / Synthetic Demo)
+  └── DataPreprocessor (Schema validation, cancellation & anomaly filtering)
+        └── RFMEngine (Vectorized R/F/M metrics, quintile scoring, segment tiering)
+              └── CustomerClustering (log1p + StandardScaler + K-Means + Silhouette)
+                    ├── FastAPI Microservice (GET /health, POST /analyze)
+                    └── Headless Batch CLI (JSON summary + Agg PNG visualizations)
 ```
 
-## How to Run
-1. Clone the repository to your local machine.
-2. Install the required dependencies: `pip install -r requirements.txt`
-3. To view the complete exploratory and analytical process, open and run `notebooks/User_Segmentation.ipynb`.
-4. To execute the production-ready pipeline, place your dataset in the `data/` directory and run: `python main.py`
+### Key Capabilities
 
+- **Dual-Mode Non-Breaking Design**: Preserves `User Segmentation.ipynb` intact while exposing modular `src/` Python packages, a parameterized batch CLI (`main.py`), and a FastAPI HTTP service (`src/api.py`).
+- **Resilient RFM & Clustering Engine**: Vectorized pandas aggregation, safe quantile scoring even for small cohorts (`< 5` customers), deterministic `log1p` + `StandardScaler` normalization, and silhouette quality scoring.
+- **Strict API Contracts & Guardrails**: Pydantic v2 schemas (`src/schemas.py`), explicit CORS allowlisting (`ALLOWED_ORIGINS`), structured leveled stdout logging, and safe `500` error boundaries.
+- **Production Packaging & CI/CD**: Pinned dependencies (`requirements.txt`, `requirements-lock.txt`, `uv.lock`), multi-stage non-root `Dockerfile`, `docker-compose.yml`, `Makefile`, Ruff + Flake8 linting, Pytest coverage gates, Semgrep SAST, and Trivy scanning.
+
+## Repository Structure
+
+```text
+├── .github/
+│   ├── dependabot.yml           # Weekly pip & github-actions updates (semver-major ignored)
+│   └── workflows/ci.yml         # Lint, Pytest coverage, Docker build, Semgrep & Trivy
+├── docs/
+│   └── RUNBOOK.md               # Operations, configuration & incident triage playbook
+├── src/
+│   ├── __init__.py
+│   ├── api.py                   # FastAPI microservice (GET /health, POST /analyze)
+│   ├── config.py                # Validated SegmentationConfig & structured logging
+│   ├── data_pipeline.py         # DataPreprocessor & deterministic synthetic generator
+│   ├── ml_clustering.py         # CustomerClustering (log1p, StandardScaler, K-Means)
+│   ├── rfm_engine.py            # RFMEngine quintile scoring & segment mapping
+│   ├── schemas.py               # Pydantic v2 request/response schemas
+│   └── visualizer.py            # Headless-safe Agg SegmentVisualizer
+├── tests/
+│   ├── test_api_integration.py  # FastAPI TestClient & error/CORS boundary tests
+│   ├── test_data_pipeline.py    # Ingestion, cleaning & synthetic generator tests
+│   ├── test_ml_clustering.py    # Clustering, headless plots & CLI mode tests
+│   ├── test_rfm_engine.py       # RFM calculation & small-cohort boundary tests
+│   └── test_schemas_and_config.py
+├── User Segmentation.ipynb      # Original exploratory analysis notebook (preserved)
+├── main.py                      # Parameterized batch & demo CLI entrypoint
+├── Dockerfile                   # Multi-stage non-root runtime (appuser UID 10001)
+├── docker-compose.yml           # Local container orchestration with healthcheck
+├── Makefile                     # Single-command install, lint, test, demo, run, build
+├── pyproject.toml               # Project metadata, Ruff & Pytest configuration
+├── requirements.txt             # Exact pinned runtime & test dependencies
+├── requirements-lock.txt        # Compiled Linux/Python 3.11 dependency lockfile
+├── uv.lock                      # Reproducible uv lockfile
+├── .env.example                 # Environment variable template
+├── SECURITY.md                  # Vulnerability reporting & security controls
+├── CHANGELOG.md                 # Semantic version release notes
+├── CONTRIBUTING.md              # Local development & PR guidelines
+└── LICENSE                      # MIT License
+```
+
+## Quickstart
+
+### 1. Local Setup
+
+```bash
+cp .env.example .env
+make install
+```
+
+### 2. Run Automated Linting & Tests
+
+```bash
+make lint
+make test
+```
+
+### 3. Execute Pipeline via CLI
+
+```bash
+# Run on built-in synthetic transactions (exports PNGs + JSON summary to outputs/)
+python main.py --demo --clusters 4 --output-dir outputs
+
+# Run on a custom CSV dataset
+python main.py --input "Online Retail Data.csv" --clusters 4 --output-dir outputs
+
+# Verify runtime configuration and health
+python main.py --health
+```
+
+### 4. Run FastAPI Microservice
+
+```bash
+make run
+# Or with Docker Compose:
+docker compose up --build
+```
+
+Verify liveness and run real-time segmentation:
+
+```bash
+curl -s http://127.0.0.1:8000/health
+```
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "n_clusters": 2,
+    "transactions": [
+      {"order_id": "ORD-1", "customer_id": 101, "order_date": "2026-02-01", "quantity": 3, "price": 25.0},
+      {"order_id": "ORD-2", "customer_id": 101, "order_date": "2026-02-15", "quantity": 2, "price": 30.0},
+      {"order_id": "ORD-3", "customer_id": 102, "order_date": "2026-01-05", "quantity": 1, "price": 12.0}
+    ]
+  }'
+```
+
+## License
+
+Released under the [MIT License](LICENSE).
