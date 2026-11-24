@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: customer-segmentation-api
+    ports:
+      - "8000:8000"
+    environment:
+      DATA_PATH: ${DATA_PATH:-Online Retail Data.csv}
+      OUTPUT_DIR: /app/outputs
+      DEFAULT_CLUSTERS: ${DEFAULT_CLUSTERS:-4}
+      RANDOM_SEED: ${RANDOM_SEED:-42}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:8000}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./outputs:/app/outputs
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped

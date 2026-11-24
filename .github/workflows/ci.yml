@@ -1,0 +1,82 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-typecheck:
+    name: Code Quality & Lint (Ruff + Flake8)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Linters
+        run: pip install ruff==0.8.4 flake8==7.1.1
+
+      - name: Run Ruff Check, Format & Flake8
+        run: |
+          python -m ruff check src tests main.py
+          python -m ruff format --check src tests main.py
+          python -m flake8 --max-line-length=120 src tests main.py
+
+  test:
+    name: Automated Test Suite (Pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest with Coverage Gate
+        run: python -m pytest tests/ -v --cov=src --cov-report=term-missing --cov-fail-under=70
+
+      - name: Verify Headless Demo Pipeline
+        run: python main.py --demo --output-dir /tmp/rfm-demo-out
+
+  build-and-security:
+    name: Docker Build & Security Scans
+    needs: [lint-and-typecheck, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep SAST Scanner
+        uses: returntocorp/semgrep-action@v1
+        continue-on-error: true
+        with:
+          config: p/python
+
+      - name: Build Hardened Docker Image
+        run: docker build -t customer-segmentation-rfm-kmeans:ci .
+
+      - name: Run Trivy Container Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: customer-segmentation-rfm-kmeans:ci
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
