@@ -59,7 +59,7 @@ packaging==26.4
     # via
     #   matplotlib
     #   pytest
-pandas==2.2.3
+pandas==2.3.3
     # via
     #   -r requirements.txt
     #   seaborn
